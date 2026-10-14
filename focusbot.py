@@ -121,6 +121,43 @@ def minimize_window(hwnd):
         user32.ShowWindow(hwnd, 6)  # SW_MINIMIZE
 
 
+RUN_KEY = r"Software\\Microsoft\\Windows\\CurrentVersion\\Run"
+
+
+def _startup_command():
+    if getattr(sys, "frozen", False):
+        return f'"{sys.executable}"'
+    pyw = os.path.join(os.path.dirname(sys.executable), "pythonw.exe")
+    return f'"{pyw if os.path.exists(pyw) else sys.executable}" "{os.path.abspath(__file__)}"'
+
+
+def startup_enabled():
+    if not IS_WIN:
+        return False
+    import winreg
+    try:
+        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, RUN_KEY) as k:
+            winreg.QueryValueEx(k, APP_NAME)
+            return True
+    except OSError:
+        return False
+
+
+def set_startup(enabled):
+    """Add/remove FocusBot from the current user's Windows startup programs."""
+    if not IS_WIN:
+        return
+    import winreg
+    with winreg.OpenKey(winreg.HKEY_CURRENT_USER, RUN_KEY, 0, winreg.KEY_SET_VALUE) as k:
+        if enabled:
+            winreg.SetValueEx(k, APP_NAME, 0, winreg.REG_SZ, _startup_command())
+        else:
+            try:
+                winreg.DeleteValue(k, APP_NAME)
+            except OSError:
+                pass
+
+
 def match_blacklist(title, exe, blacklist):
     t, e = title.lower(), exe.lower()
     for kw in blacklist:
@@ -836,11 +873,23 @@ class FocusBot(QWidget):
         if self.last_other:
             name = self.last_other[1] or self.last_other[0][:30]
             m.addAction(f"Blacklist '{name}'", self.blacklist_last)
+        if IS_WIN:
+            a = QAction("Start with Windows", m, checkable=True)
+            a.setChecked(startup_enabled())
+            a.triggered.connect(self.toggle_startup)
+            m.addAction(a)
         m.addAction("Settings...", self.open_settings)
         m.addAction("Today's stats", self.show_stats)
         m.addSeparator()
         m.addAction("Hide" if self.isVisible() else "Show", lambda: self.setVisible(not self.isVisible()))
         m.addAction("Quit", QApplication.quit)
+
+    def toggle_startup(self, enabled):
+        try:
+            set_startup(enabled)
+            self.say("I'll launch when Windows starts." if enabled else "Removed from startup.", 3)
+        except OSError as e:
+            self.say(f"Couldn't change startup: {e}", 4)
 
     def set_harshness(self, i):
         self.cfg["harshness"] = i

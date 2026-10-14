@@ -11,6 +11,7 @@ A floating robot desktop companion for Windows that helps you focus.
   2. **Firm**: direct after 8s, repeats every 25s, escalates
   3. **Drill Sergeant**: after 3s it flies to the middle of your screen, shakes, beeps, and yells
   4. **Enforcer**: Drill Sergeant behavior plus it **minimizes** the distracting window
+- "Start with Windows" toggle in the right-click menu.
 - Daily stats, a tray icon, and a "Blacklist this app" quick action.
 
 ## Controls
