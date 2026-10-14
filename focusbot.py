@@ -121,7 +121,7 @@ def minimize_window(hwnd):
         user32.ShowWindow(hwnd, 6)  # SW_MINIMIZE
 
 
-RUN_KEY = r"Software\\Microsoft\\Windows\\CurrentVersion\\Run"
+RUN_KEY = r"Software\Microsoft\Windows\CurrentVersion\Run"
 
 
 def _startup_command():
