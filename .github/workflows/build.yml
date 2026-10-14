@@ -1,0 +1,27 @@
+name: Build FocusBot.exe
+
+on:
+  push:
+    branches: ["**"]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: pip install -r requirements.txt pyinstaller pillow
+      - name: Render icon
+        run: python make_icon.py
+        env:
+          QT_QPA_PLATFORM: offscreen
+      - name: Build exe
+        run: pyinstaller --noconfirm --onefile --windowed --name FocusBot --icon icon.png focusbot.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: FocusBot-windows
+          path: dist/FocusBot.exe
